@@ -19,7 +19,7 @@ Sono esclusi i temi già coperti da fonti nazionali/regionali (bilancio via SIOP
 
 ## Uso
 
-Nessuna installazione. Basta aprire [https://piersoft.github.io/comune-csv-demo/](index) in un browser, oppure scaricarlo.
+Nessuna installazione. Basta aprire [https://piersoft.github.io/comune-csv-demo/] in un browser, oppure scaricarlo.
 
 Tutti i dati (temi, dataset, campi, esempi) sono incorporati nel file: funziona anche offline.
 
