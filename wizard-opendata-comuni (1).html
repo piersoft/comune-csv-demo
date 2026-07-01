@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Procedura guidata Open Data — Comuni</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F5F3EE;
+    --paper-alt:#EDE9DD;
+    --ink:#1B2420;
+    --ink-soft:#4E594F;
+    --ink-faint:#8A8F84;
+    --line:#D8D2C0;
+    --stamp:#B23A2E;
+    --stamp-dark:#8E2C22;
+    --ok:#2F6B4F;
+    --warn:#B8791C;
+    --mono-bg:#1B2420;
+    --mono-fg:#9BE3B5;
+    --radius:2px;
+    --serif: 'Newsreader', serif;
+    --sans: 'IBM Plex Sans', -apple-system, sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{color:inherit;}
+
+  /* ===== Header ===== */
+  .masthead{
+    border-bottom:1px solid var(--line);
+    padding:20px clamp(16px,4vw,48px);
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .masthead .brand{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .masthead h1{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:clamp(20px,2.6vw,26px);
+    margin:2px 0 0;
+    letter-spacing:.01em;
+  }
+  .masthead .tag{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--ink-faint);
+    border:1px solid var(--line);
+    padding:5px 10px;
+    border-radius:var(--radius);
+    align-self:center;
+  }
+
+  /* ===== Layout ===== */
+  .app{
+    display:grid;
+    grid-template-columns:220px 1fr;
+    max-width:1180px;
+    margin:0 auto;
+    padding:clamp(20px,4vw,48px);
+    gap:clamp(24px,4vw,56px);
+    align-items:start;
+  }
+  @media (max-width:780px){
+    .app{grid-template-columns:1fr; padding:20px 16px 60px;}
+  }
+
+  /* ===== Rail / Stepper ===== */
+  .rail{
+    position:sticky;
+    top:20px;
+    border-left:1px solid var(--line);
+    padding-left:18px;
+  }
+  @media (max-width:780px){
+    .rail{
+      position:static;
+      border-left:none;
+      border-bottom:1px solid var(--line);
+      padding:0 0 18px;
+      display:flex;
+      gap:10px;
+      overflow-x:auto;
+    }
+  }
+  .step-item{
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    padding:12px 0;
+    cursor:default;
+    opacity:.45;
+    transition:opacity .2s ease;
+  }
+  .step-item.is-active,.step-item.is-done{opacity:1;}
+  .step-item.is-done{cursor:pointer;}
+  @media (max-width:780px){
+    .step-item{flex-direction:column; gap:4px; min-width:120px; padding:0;}
+  }
+  .step-num{
+    font-family:var(--mono);
+    font-size:12px;
+    width:22px; height:22px;
+    border:1px solid var(--ink);
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .step-item.is-active .step-num{background:var(--ink); color:var(--paper);}
+  .step-item.is-done .step-num{background:var(--ok); border-color:var(--ok); color:#fff;}
+  .step-label{padding-top:2px;}
+  .step-label b{display:block; font-size:14px;}
+  .step-label span{display:block; font-size:12px; color:var(--ink-faint); margin-top:1px;}
+
+  /* ===== Panels ===== */
+  .panel{display:none; animation:rise .35s ease;}
+  .panel.is-active{display:block;}
+  @media (prefers-reduced-motion:reduce){.panel{animation:none;}}
+  @keyframes rise{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
+
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--stamp);
+    margin:0 0 8px;
+  }
+  h2{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:clamp(22px,3vw,30px);
+    margin:0 0 10px;
+  }
+  .lede{color:var(--ink-soft); max-width:56ch; margin:0 0 28px; font-size:15px;}
+
+  /* Step 1: temi */
+  .temi-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+    gap:12px;
+  }
+  .tema-card{
+    border:1px solid var(--line);
+    background:var(--paper-alt);
+    padding:16px;
+    text-align:left;
+    cursor:pointer;
+    font-family:var(--sans);
+    border-radius:var(--radius);
+    transition:border-color .15s ease, transform .15s ease;
+  }
+  .tema-card:hover{border-color:var(--ink-soft);}
+  .tema-card:focus-visible{outline:2px solid var(--stamp); outline-offset:2px;}
+  .tema-card .n{
+    font-family:var(--mono); font-size:11px; color:var(--ink-faint);
+  }
+  .tema-card h3{margin:6px 0 4px; font-size:16px; font-weight:600;}
+  .tema-card p{margin:0; font-size:12.5px; color:var(--ink-soft);}
+
+  /* Step 2: dataset list */
+  .dataset-list{display:flex; flex-direction:column; gap:10px;}
+  .dataset-card{
+    border:1px solid var(--line);
+    padding:16px 18px;
+    border-radius:var(--radius);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:16px;
+    cursor:pointer;
+    background:#fff;
+    transition:border-color .15s ease;
+  }
+  .dataset-card:hover{border-color:var(--ink-soft);}
+  .dataset-card:focus-visible{outline:2px solid var(--stamp); outline-offset:2px;}
+  .dataset-card h3{margin:0 0 4px; font-size:16.5px; font-weight:600;}
+  .dataset-card p{margin:0; font-size:13px; color:var(--ink-soft); max-width:56ch;}
+  .dataset-card .go{font-family:var(--mono); font-size:12px; color:var(--ink-faint); flex-shrink:0;}
+  .badge-clean{
+    display:inline-block;
+    font-family:var(--mono);
+    font-size:10px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--ok);
+    border:1px solid var(--ok);
+    padding:2px 6px;
+    border-radius:var(--radius);
+    margin-bottom:6px;
+  }
+
+  .back-link{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:var(--mono); font-size:12px; color:var(--ink-soft);
+    background:none; border:none; cursor:pointer; padding:0; margin-bottom:22px;
+  }
+  .back-link:hover{color:var(--stamp);}
+
+  /* Step 3: template */
+  .tpl-head{
+    display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;
+    margin-bottom:18px;
+  }
+  .stamp-mark{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--stamp);
+    border:1.5px solid var(--stamp);
+    padding:6px 10px;
+    border-radius:50%;
+    transform:rotate(-6deg);
+    display:inline-block;
+    letter-spacing:.05em;
+  }
+  table.fields{width:100%; border-collapse:collapse; font-size:13.5px; margin-bottom:8px;}
+  table.fields th{
+    text-align:left; font-family:var(--mono); font-size:11px; text-transform:uppercase;
+    letter-spacing:.06em; color:var(--ink-faint); font-weight:500;
+    border-bottom:1px solid var(--ink); padding:8px 10px;
+  }
+  table.fields td{padding:10px 10px; border-bottom:1px solid var(--line); vertical-align:top;}
+  table.fields tr:last-child td{border-bottom:1px solid var(--ink);}
+  .req{color:var(--stamp); font-weight:600;}
+  .opt{color:var(--ink-faint);}
+  .onto-chip{
+    font-family:var(--mono);
+    font-size:11.5px;
+    background:var(--mono-bg);
+    color:var(--mono-fg);
+    padding:3px 7px;
+    border-radius:var(--radius);
+    white-space:nowrap;
+    display:inline-block;
+  }
+  .field-type{font-family:var(--mono); font-size:12px; color:var(--ink-soft);}
+
+  .tpl-actions{
+    display:flex; gap:12px; flex-wrap:wrap; margin-top:26px; align-items:center;
+  }
+  .btn{
+    font-family:var(--sans);
+    font-weight:600;
+    font-size:14px;
+    padding:12px 22px;
+    border-radius:var(--radius);
+    border:1px solid var(--ink);
+    background:var(--ink);
+    color:var(--paper);
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+  }
+  .btn:hover{background:#000;}
+  .btn.secondary{background:transparent; color:var(--ink); border-color:var(--ink);}
+  .btn.secondary:hover{background:var(--paper-alt);}
+  .btn.stamp-btn{background:var(--stamp); border-color:var(--stamp);}
+  .btn.stamp-btn:hover{background:var(--stamp-dark);}
+  .btn:focus-visible{outline:2px solid var(--stamp); outline-offset:2px;}
+
+  .note-box{
+    border-left:3px solid var(--warn);
+    background:var(--paper-alt);
+    padding:12px 16px;
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-top:20px;
+    max-width:64ch;
+  }
+
+  /* Step 4 */
+  .final-wrap{max-width:60ch;}
+  .final-icon{
+    width:52px; height:52px; border-radius:50%;
+    border:2px solid var(--ok); color:var(--ok);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-size:20px; margin-bottom:18px;
+  }
+  .simba-box{
+    border:1px solid var(--line);
+    background:var(--paper-alt);
+    padding:20px 22px;
+    border-radius:var(--radius);
+    margin:22px 0;
+  }
+  .simba-box h4{margin:0 0 6px; font-family:var(--serif); font-size:18px; font-weight:600;}
+  .simba-box p{margin:0 0 16px; font-size:13.5px; color:var(--ink-soft);}
+  input.simba-url{
+    font-family:var(--mono); font-size:12.5px;
+    width:100%; padding:10px 12px;
+    border:1px solid var(--line); border-radius:var(--radius);
+    background:#fff; color:var(--ink-soft);
+    margin-bottom:12px;
+  }
+
+  footer{
+    max-width:1180px; margin:0 auto; padding:24px clamp(16px,4vw,48px) 60px;
+    font-family:var(--mono); font-size:11px; color:var(--ink-faint);
+    border-top:1px solid var(--line);
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div>
+    <div class="brand">Comune · Open Data</div>
+    <h1>Dal foglio Excel al dato aperto di qualità</h1>
+  </div>
+  <div class="tag">procedura guidata — 4 passi</div>
+</header>
+
+<div class="app">
+
+  <nav class="rail" id="rail" aria-label="Avanzamento procedura"></nav>
+
+  <main>
+
+    <!-- STEP 1 -->
+    <section class="panel is-active" id="panel-1">
+      <p class="eyebrow">Passo 1 di 4</p>
+      <h2>Che argomento vuoi pubblicare?</h2>
+      <p class="lede">Scegli l'ambito. Ogni dataset proposto è stato scelto perché non duplica dati già disponibili su Cruscotto Italia o su registri regionali — il tuo lavoro aggiunge un'informazione che oggi non esiste a livello nazionale.</p>
+      <div class="temi-grid" id="temi-grid"></div>
+    </section>
+
+    <!-- STEP 2 -->
+    <section class="panel" id="panel-2">
+      <button class="back-link" data-goto="1">← cambia argomento</button>
+      <p class="eyebrow">Passo 2 di 4</p>
+      <h2 id="tema-title">Dataset proposti</h2>
+      <p class="lede" id="tema-lede"></p>
+      <div class="dataset-list" id="dataset-list"></div>
+    </section>
+
+    <!-- STEP 3 -->
+    <section class="panel" id="panel-3">
+      <button class="back-link" data-goto="2">← altri dataset</button>
+      <p class="eyebrow">Passo 3 di 4</p>
+      <div class="tpl-head">
+        <div>
+          <h2 id="ds-title"></h2>
+          <p class="lede" id="ds-desc" style="margin-bottom:0"></p>
+        </div>
+        <span class="stamp-mark" id="ds-onto"></span>
+      </div>
+
+      <table class="fields">
+        <thead>
+          <tr><th>Campo</th><th>Tipo</th><th>Obbligatorio</th><th>Proprietà ontologica</th></tr>
+        </thead>
+        <tbody id="fields-body"></tbody>
+      </table>
+
+      <div class="tpl-actions">
+        <button class="btn" id="btn-download">↓ Scarica il modello CSV</button>
+        <button class="btn secondary" data-goto="4">Ho compilato il file →</button>
+      </div>
+      <p style="font-size:12.5px; color:var(--ink-faint); margin-top:10px;">Il file scaricato contiene 4-5 righe di esempio già compilate correttamente: sostituiscile con i tuoi dati reali, mantenendo lo stesso formato.</p>
+
+      <div class="note-box" id="ds-note" hidden></div>
+    </section>
+
+    <!-- STEP 4 -->
+    <section class="panel" id="panel-4">
+      <button class="back-link" data-goto="3">← torna al modello</button>
+      <p class="eyebrow">Passo 4 di 4</p>
+      <div class="final-wrap">
+        <div class="final-icon">✓</div>
+        <h2>Ottimo. Ora convalida il file.</h2>
+        <p class="lede">Prima di pubblicarlo sul portale open data del Comune, fai controllare il CSV compilato da SIMBA: verifica automaticamente la qualità del dato, segnala eventuali errori e propone l'arricchimento semantico verso l'ontologia indicata al passo precedente.</p>
+
+        <div class="simba-box">
+          <h4>Valida su SIMBA</h4>
+          <p>SIMBA (AgID) verifica automaticamente la qualità del CSV e propone l'arricchimento semantico verso l'ontologia indicata al passo precedente.</p>
+          <a class="btn stamp-btn" href="https://chatbot.dati.gov.it/chatbot/" target="_blank" rel="noopener">Apri SIMBA e carica il CSV ↗</a>
+        </div>
+
+        <button class="btn secondary" data-goto="1">Pubblica un altro dataset</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>Procedura guidata statica · nessun dato lascia questo browser · schema campi conforme a OntoPiA / dati-semantic-assets</footer>
+
+<script>
+/* =========================================================
+   DATI: 12 dataset canonici, temi, campi SACRI
+   ========================================================= */
+const TEMI = [
+  { id:"demografia", label:"Anagrafe e demografia", desc:"Eventi anagrafici, popolazione, bilancio demografico", datasets:["anagrafe","popolazione","bilancio_demo"] },
+  { id:"sicurezza",  label:"Sicurezza stradale",     desc:"Sinistri e incidenti sul territorio comunale",        datasets:["sinistri"] },
+  { id:"trasparenza",label:"Trasparenza",            desc:"Concorsi, bandi, atti amministrativi",                 datasets:["concorsi"] },
+  { id:"salute",     label:"Salute pubblica",        desc:"Postazioni di primo soccorso sul territorio",          datasets:["dae"] },
+  { id:"mobilita",   label:"Mobilità e trasporti",   desc:"Trasporto pubblico, connettività, sosta",               datasets:["gtfs","wifi","parcheggi"] },
+  { id:"turismo",    label:"Turismo e commercio",    desc:"Strutture ricettive ed esercizi commerciali",           datasets:["ricettive","commercio"] },
+  { id:"infrastrutture", label:"Infrastrutture",     desc:"Dotazioni fisiche sul territorio",                      datasets:["illuminazione"] }
+];
+
+const DATASETS = {
+  anagrafe:{
+    title:"Anagrafe: eventi (nascite, decessi, iscrizioni, cancellazioni)",
+    onto:"CPV · RPO · TI",
+    desc:"Dettaglio dinamico degli eventi anagrafici, non presente a questa granularità a livello nazionale.",
+    note:"Se pubblichi un dato aggregato (es. conteggio giornaliero) preferisci il campo \"conteggio\" invece dei dati individuali: evita di esporre informazioni personali non necessarie.",
+    examples:[
+      ["1","nascita","2026-01-05","","","San Vito dei Normanni","3"],
+      ["2","decesso","2026-01-07","82","M","San Vito dei Normanni","1"],
+      ["3","iscrizione","2026-01-10","","","San Vito dei Normanni","2"],
+      ["4","cancellazione","2026-01-12","","","San Vito dei Normanni","1"],
+      ["5","decesso","2026-01-15","76","F","San Vito dei Normanni","1"]
+    ],
+    fields:[
+      {name:"id", type:"numero intero", req:false, onto:"l0:identifier"},
+      {name:"tipo_evento", type:"testo (decesso / nascita / iscrizione / cancellazione)", req:true, onto:"rpo:RegisteredResidenceEventType"},
+      {name:"data_evento", type:"data", req:true, onto:"ti:date"},
+      {name:"eta", type:"numero intero", req:false, onto:"cpv:age"},
+      {name:"sesso", type:"testo (M/F)", req:false, onto:"cpv:hasSex"},
+      {name:"comune", type:"testo", req:true, onto:"clv:hasCity"},
+      {name:"conteggio", type:"numero intero", req:false, onto:"qb:Observation"}
+    ]
+  },
+  popolazione:{
+    title:"Popolazione residente e straniera per quartiere",
+    onto:"CLV · QB",
+    desc:"Granularità sub-comunale (quartiere/zona), assente nei dati ISTAT aggregati a livello di intero comune.",
+    examples:[
+      ["1","Centro","2025","Totale","0-14","412","38"],
+      ["2","Centro","2025","Totale","15-64","2103","205"],
+      ["3","Centro","2025","Totale","65+","890","41"],
+      ["4","Marina","2025","Totale","0-14","156","12"],
+      ["5","Marina","2025","Totale","15-64","780","64"]
+    ],
+    fields:[
+      {name:"id", type:"numero intero", req:false, onto:"l0:identifier"},
+      {name:"localita", type:"testo (quartiere/zona)", req:true, onto:"clv:hasDistrict"},
+      {name:"anno", type:"numero intero", req:true, onto:"ti:year"},
+      {name:"sesso", type:"testo (M/F/Totale)", req:false, onto:"qb:DimensionProperty"},
+      {name:"fascia_eta", type:"testo (es. 0-14)", req:false, onto:"qb:DimensionProperty"},
+      {name:"numero_residenti", type:"numero intero", req:true, onto:"qb:Observation"},
+      {name:"numero_stranieri", type:"numero intero", req:false, onto:"qb:Observation"}
+    ]
+  },
+  bilancio_demo:{
+    title:"Bilancio demografico mensile",
+    onto:"QB · TI",
+    desc:"ISTAT pubblica solo il dato annuale: la cadenza mensile è un'informazione che oggi il Comune soltanto possiede.",
+    examples:[
+      ["1","2026","Gennaio","12","9","25","18","15420"],
+      ["2","2026","Febbraio","10","11","19","22","15416"],
+      ["3","2026","Marzo","14","8","31","20","15433"],
+      ["4","2026","Aprile","9","13","22","17","15434"],
+      ["5","2026","Maggio","11","7","28","24","15442"]
+    ],
+    fields:[
+      {name:"id", type:"numero intero", req:false, onto:"l0:identifier"},
+      {name:"anno", type:"numero intero", req:true, onto:"ti:year"},
+      {name:"mese", type:"testo o numero", req:true, onto:"ti:month"},
+      {name:"nati", type:"numero intero", req:true, onto:"qb:Observation"},
+      {name:"decessi", type:"numero intero", req:true, onto:"qb:Observation"},
+      {name:"immigrati", type:"numero intero", req:false, onto:"qb:Observation"},
+      {name:"emigrati", type:"numero intero", req:false, onto:"qb:Observation"},
+      {name:"totale_residenti", type:"numero intero", req:true, onto:"qb:Observation"}
+    ]
+  },
+  sinistri:{
+    title:"Sinistri stradali per via",
+    onto:"CLV · QB · TI",
+    desc:"ISTAT rilascia solo l'aggregato provinciale: il dettaglio via per via è unicamente comunale.",
+    examples:[
+      ["1","2026-02-03","Via Roma","40.5619","17.8562","tamponamento","2","1","0"],
+      ["2","2026-02-14","Via Garibaldi","40.5601","17.8540","investimento pedone","1","1","0"],
+      ["3","2026-03-01","Corso Vittorio Emanuele","40.5588","17.8575","scontro frontale","2","3","0"],
+      ["4","2026-03-19","Via Dante","40.5633","17.8511","uscita di strada","1","0","0"],
+      ["5","2026-04-02","Piazza Plebiscito","40.5595","17.8558","tamponamento","3","2","0"]
+    ],
+    fields:[
+      {name:"id", type:"numero intero", req:false, onto:"l0:identifier"},
+      {name:"data", type:"data", req:true, onto:"ti:date"},
+      {name:"localita", type:"testo (via/zona)", req:true, onto:"clv:hasStreetToponym"},
+      {name:"lat", type:"numero decimale", req:false, onto:"clv:hasGeometry"},
+      {name:"lon", type:"numero decimale", req:false, onto:"clv:hasGeometry"},
+      {name:"tipo", type:"testo (es. tamponamento)", req:false, onto:"qb:DimensionProperty"},
+      {name:"veicoli_coinvolti", type:"numero intero", req:false, onto:"qb:Observation"},
+      {name:"feriti", type:"numero intero", req:false, onto:"qb:Observation"},
+      {name:"decessi", type:"numero intero", req:false, onto:"qb:Observation"}
+    ]
+  },
+  concorsi:{
+    title:"Concorsi pubblici (assunzioni personale)",
+    onto:"CPSV · Transparency",
+    desc:"Non coperto da ANAC/BDAP, che riguardano gli appalti: i concorsi per il personale restano un dato solo comunale.",
+    note:"Non esiste una proprietà ontologica nativa per \"numero posti banditi\": verrà gestita come proprietà aggiuntiva nel namespace del Comune.",
+    examples:[
+      ["1","Bando di concorso","45/2026","Istruttore amministrativo cat. C","2","2026-03-01","2026-04-15","https://www.comune.esempio.it/bandi/45-2026"],
+      ["2","Bando di concorso","46/2026","Agente di polizia locale cat. C","3","2026-03-10","2026-04-20","https://www.comune.esempio.it/bandi/46-2026"],
+      ["3","Bando di concorso","52/2026","Istruttore tecnico cat. D","1","2026-04-05","2026-05-10","https://www.comune.esempio.it/bandi/52-2026"],
+      ["4","Bando di concorso","58/2026","Assistente sociale cat. D","1","2026-05-01","2026-06-05","https://www.comune.esempio.it/bandi/58-2026"]
+    ],
+    fields:[
+      {name:"id", type:"numero intero", req:false, onto:"l0:identifier"},
+      {name:"tipo_atto", type:"testo (fisso: Bando di concorso)", req:true, onto:"tr:TransparencyActivityTypology"},
+      {name:"numero_atto", type:"testo", req:true, onto:"tr:TransparencyResource"},
+      {name:"oggetto", type:"testo", req:true, onto:"cpsv:PublicService"},
+      {name:"numero_posti", type:"numero intero", req:true, onto:"— proprietà locale"},
+      {name:"data_pubblicazione", type:"data", req:true, onto:"ti:issued"},
+      {name:"data_scadenza", type:"data", req:true, onto:"ti:endTime"},
+      {name:"url", type:"indirizzo web", req:true, onto:"tr:accessURL"}
+    ]
+  },
+  dae:{
+    title:"Defibrillatori (DAE) geolocalizzati",
+    onto:"POI · CLV · SM",
+    desc:"Nessuna sovrapposizione con i dati sanitari nazionali (che coprono solo farmacie e ospedali). Valido per tutti i Comuni fuori Emilia-Romagna, che ha già un registro regionale unico.",
+    examples:[
+      ["1","DAE Piazza Municipio","DAE","Piazza Municipio 1","Mesagne","40.5561","17.8034","si","protezionecivile@comune.mesagne.br.it","0831777111"],
+      ["2","DAE Villa Comunale","DAE","Via Villa Comunale","Mesagne","40.5578","17.8021","si","",""],
+      ["3","DAE Stazione FS","DAE","Piazzale della Stazione","Mesagne","40.5602","17.8055","no","","0831777222"],
+      ["4","DAE Scuola Marconi","DAE","Via Marconi 12","Mesagne","40.5589","17.8047","no","segreteria@icmarconi.edu.it",""]
+    ],
+    fields:[
+      {name:"id", type:"numero intero", req:false, onto:"poi:POIID"},
+      {name:"nome", type:"testo", req:true, onto:"poi:POIofficialName"},
+      {name:"tipo_poi", type:"testo (fisso: DAE)", req:true, onto:"poi:hasPOICategory"},
+      {name:"indirizzo", type:"testo", req:true, onto:"clv:hasAddress"},
+      {name:"comune", type:"testo", req:true, onto:"clv:hasCity"},
+      {name:"lat", type:"numero decimale", req:true, onto:"clv:hasGeometry"},
+      {name:"lon", type:"numero decimale", req:true, onto:"clv:hasGeometry"},
+      {name:"accessibile_h24", type:"testo (si/no)", req:false, onto:"ac:hasAccessCondition"},
+      {name:"email", type:"testo", req:false, onto:"sm:emailAddress"},
+      {name:"telefono", type:"testo", req:false, onto:"sm:telephoneNumber"}
+    ]
+  },
+  gtfs:{
+    title:"Trasporto pubblico locale (GTFS)",
+    onto:"GTFS",
+    desc:"Standard internazionale già pronto: non serve inventare uno schema, basta seguire la specifica GTFS ufficiale.",
+    examples:[
+      ["S001","Piazza Duomo","40.5602","17.8033","Linea 1","1"],
+      ["S002","Stazione FS","40.5611","17.8058","Linea 1","1"],
+      ["S003","Ospedale Civile","40.5578","17.8091","Linea 2","0"],
+      ["S004","Cimitero","40.5540","17.8102","Linea 2","1"]
+    ],
+    fields:[
+      {name:"stop_id", type:"testo", req:true, onto:"gtfs:Stop"},
+      {name:"stop_name", type:"testo", req:true, onto:"gtfs:longName"},
+      {name:"stop_lat", type:"numero decimale", req:true, onto:"gtfs:latitude"},
+      {name:"stop_lon", type:"numero decimale", req:true, onto:"gtfs:longitude"},
+      {name:"route_short_name", type:"testo", req:false, onto:"gtfs:shortName"},
+      {name:"wheelchair_boarding", type:"vero/falso", req:false, onto:"gtfs:wheelchairAccessible"}
+    ]
+  },
+  wifi:{
+    title:"Wifi pubblico e affollamento zone",
+    onto:"POI · QB · TI",
+    desc:"Dato IoT locale, senza alcuna fonte nazionale equivalente.",
+    examples:[
+      ["Z01","Piazza Duomo","2026-05-01 12:00","68.5","40.5602","17.8033"],
+      ["Z02","Villa Comunale","2026-05-01 12:00","42.1","40.5578","17.8021"],
+      ["Z03","Piazza Duomo","2026-05-01 18:00","91.3","40.5602","17.8033"],
+      ["Z04","Biblioteca Comunale","2026-05-01 15:00","25.7","40.5590","17.8040"]
+    ],
+    fields:[
+      {name:"codice_zona", type:"testo", req:true, onto:"poi:POIID"},
+      {name:"nome_zona", type:"testo", req:true, onto:"poi:POIofficialName"},
+      {name:"data_rilevazione", type:"data e ora", req:true, onto:"ti:date"},
+      {name:"affollamento_medio", type:"numero decimale", req:true, onto:"qb:Observation"},
+      {name:"lat", type:"numero decimale", req:false, onto:"clv:hasGeometry"},
+      {name:"lon", type:"numero decimale", req:false, onto:"clv:hasGeometry"}
+    ]
+  },
+  parcheggi:{
+    title:"Parcheggi: disponibilità e struttura",
+    onto:"PARK",
+    desc:"Ontologia OntoPiA dedicata ai parcheggi (park:CarPark), più precisa del generico punto di interesse.",
+    examples:[
+      ["1","Parcheggio Stazione","Piazzale della Stazione","40.5611","17.8058","Scoperto","120","6","1.00","si"],
+      ["2","Parcheggio Centro Storico","Via Roma","40.5602","17.8033","Multipiano","300","12","1.50","si"],
+      ["3","Parcheggio Ospedale","Via Ospedale 4","40.5578","17.8091","Raso","80","8","0","si"],
+      ["4","Parcheggio Villa Comunale","Via Villa Comunale","40.5578","17.8021","Scoperto","45","2","0","no"]
+    ],
+    fields:[
+      {name:"id", type:"numero intero", req:true, onto:"park:CarPark"},
+      {name:"nome", type:"testo", req:true, onto:"park (label)"},
+      {name:"indirizzo", type:"testo", req:true, onto:"clv:hasAddress"},
+      {name:"lat", type:"numero decimale", req:true, onto:"clv:hasGeometry"},
+      {name:"lon", type:"numero decimale", req:true, onto:"clv:hasGeometry"},
+      {name:"tipo_parcheggio", type:"testo (Multipiano/Coperto/Scoperto/Raso)", req:false, onto:"park (categoria)"},
+      {name:"stalli", type:"numero intero", req:true, onto:"park (capienza)"},
+      {name:"posti_disabili", type:"numero intero", req:false, onto:"park (capienza)"},
+      {name:"tariffa_oraria", type:"numero decimale", req:false, onto:"qb:Observation"},
+      {name:"accessibile_h24", type:"testo (si/no)", req:false, onto:"ac:hasAccessCondition"}
+    ]
+  },
+  ricettive:{
+    title:"Strutture ricettive: elenco nominativo",
+    onto:"ACCO (sottoclasse POI) · SM",
+    desc:"Cruscotto Italia ha solo il NUMERO aggregato ISTAT: l'elenco nominativo con indirizzo è un valore aggiunto reale.",
+    examples:[
+      ["1","B&B Vico del Sole","bed_and_breakfast","Via Vico del Sole 5","Centro Storico","","6","3","ATTIVO","35","60","2019-06-01","40.5599","17.8036"],
+      ["2","Hotel President","albergo","Corso Vittorio Emanuele 88","Centro","4","120","60","ATTIVO","70","140","2005-03-15","40.5588","17.8575"],
+      ["3","Agriturismo Le Querce","agriturismo","Contrada Querce 12","Periferia","","10","5","ATTIVO","45","80","2015-09-01","40.5450","17.7890"],
+      ["4","Affittacamere Corte Vecchia","affittacamere","Via Corte Vecchia 3","Centro Storico","","4","2","ATTIVO","30","50","2021-01-10","40.5605","17.8029"]
+    ],
+    fields:[
+      {name:"id", type:"testo o numero", req:false, onto:"l0:identifier — numero pratica SUAP o codice albo"},
+      {name:"denominazione", type:"testo", req:true, onto:"rdfs:label"},
+      {name:"tipologia", type:"testo (B&B/albergo/casa vacanza/affittacamere/agriturismo/ostello/residence/campeggio)", req:true, onto:"acco:hasAccommodationTypology"},
+      {name:"indirizzo", type:"testo", req:true, onto:"clv:hasAddress"},
+      {name:"localita", type:"testo (quartiere/zona)", req:false, onto:"clv:hasDistrict"},
+      {name:"classificazione", type:"numero (stelle) o testo", req:false, onto:"acco:hasAccommodationClassification"},
+      {name:"posti_letto", type:"numero intero", req:false, onto:"acco:totalBed"},
+      {name:"camere", type:"numero intero", req:false, onto:"acco:totalRoom"},
+      {name:"stato", type:"testo (ATTIVO/CESSATO/SOSPESO)", req:false, onto:"cpsv:ServiceStatus"},
+      {name:"tariffa_min", type:"numero decimale", req:false, onto:"qb:Observation"},
+      {name:"tariffa_max", type:"numero decimale", req:false, onto:"qb:Observation"},
+      {name:"data_inizio_attivita", type:"data", req:false, onto:"ti:date"},
+      {name:"lat", type:"numero decimale", req:false, onto:"clv:hasGeometry"},
+      {name:"lon", type:"numero decimale", req:false, onto:"clv:hasGeometry"}
+    ]
+  },
+  commercio:{
+    title:"Esercizi commerciali (ristorazione, bar)",
+    onto:"POI · CLV",
+    desc:"ISTAT ASIA è aggregato per settore: l'elenco nominativo con indirizzo non esiste a livello nazionale.",
+    examples:[
+      ["1","Trattoria da Nino","ristorante","Via Roma","14","40.5601","17.8034"],
+      ["2","Bar Centrale","bar","Piazza Duomo","2","40.5602","17.8033"],
+      ["3","Pub Old Dublin","pub","Via Garibaldi","45","40.5595","17.8020"],
+      ["4","Pizzeria Napoli","ristorante","Corso Vittorio Emanuele","71","40.5590","17.8058"]
+    ],
+    fields:[
+      {name:"id", type:"numero intero", req:false, onto:"l0:identifier"},
+      {name:"nome_esercizio", type:"testo", req:true, onto:"poi:POIofficialName"},
+      {name:"tipologia", type:"testo (ristorante/bar/pub)", req:true, onto:"poi:hasPOICategory"},
+      {name:"indirizzo", type:"testo", req:true, onto:"clv:hasAddress"},
+      {name:"civico", type:"testo", req:false, onto:"clv:hasNumber"},
+      {name:"lat", type:"numero decimale", req:false, onto:"clv:hasGeometry"},
+      {name:"lon", type:"numero decimale", req:false, onto:"clv:hasGeometry"}
+    ]
+  },
+  illuminazione:{
+    title:"Pubblica illuminazione (pali georiferiti)",
+    onto:"POI · CLV",
+    desc:"Nessuna fonte nazionale equivalente: il censimento dei punti luce è patrimonio esclusivamente comunale.",
+    examples:[
+      ["PL-0001","40.5602","17.8033","LED","funzionante"],
+      ["PL-0002","40.5595","17.8040","LED","funzionante"],
+      ["PL-0003","40.5588","17.8058","Sodio","guasto"],
+      ["PL-0004","40.5611","17.8021","LED","funzionante"]
+    ],
+    fields:[
+      {name:"palo_id", type:"testo", req:true, onto:"poi:POIID"},
+      {name:"lat", type:"numero decimale", req:true, onto:"clv:hasGeometry"},
+      {name:"lon", type:"numero decimale", req:true, onto:"clv:hasGeometry"},
+      {name:"tipo_lampada", type:"testo", req:false, onto:"poi:hasPOICategory"},
+      {name:"stato", type:"testo (funzionante/guasto)", req:false, onto:"poi:POIstate"}
+    ]
+  }
+};
+
+/* =========================================================
+   STATO E NAVIGAZIONE
+   ========================================================= */
+let state = { step:1, tema:null, dataset:null };
+
+const STEP_META = [
+  {n:1, label:"Tema",    sub:"Scegli l'argomento"},
+  {n:2, label:"Dataset",  sub:"Scegli l'esempio"},
+  {n:3, label:"Modello",  sub:"Struttura e download"},
+  {n:4, label:"Verifica", sub:"Valida su SIMBA"}
+];
+
+function renderRail(){
+  const rail = document.getElementById('rail');
+  rail.innerHTML = STEP_META.map(s=>{
+    const cls = s.n===state.step ? 'is-active' : (s.n<state.step ? 'is-done':'');
+    return `<div class="step-item ${cls}" data-step="${s.n}">
+      <span class="step-num">${s.n}</span>
+      <span class="step-label"><b>${s.label}</b><span>${s.sub}</span></span>
+    </div>`;
+  }).join('');
+  rail.querySelectorAll('.step-item.is-done').forEach(el=>{
+    el.addEventListener('click', ()=>goTo(parseInt(el.dataset.step)));
+  });
+}
+
+function goTo(step){
+  state.step = step;
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('is-active'));
+  document.getElementById('panel-'+step).classList.add('is-active');
+  renderRail();
+  window.scrollTo({top:0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto':'smooth'});
+}
+
+document.querySelectorAll('[data-goto]').forEach(el=>{
+  el.addEventListener('click', ()=>goTo(parseInt(el.dataset.goto)));
+});
+
+/* ===== Step 1: temi ===== */
+function renderTemi(){
+  const grid = document.getElementById('temi-grid');
+  grid.innerHTML = TEMI.map((t,i)=>`
+    <button class="tema-card" data-tema="${t.id}">
+      <span class="n">${String(i+1).padStart(2,'0')}</span>
+      <h3>${t.label}</h3>
+      <p>${t.desc}</p>
+    </button>
+  `).join('');
+  grid.querySelectorAll('.tema-card').forEach(el=>{
+    el.addEventListener('click', ()=>selectTema(el.dataset.tema));
+  });
+}
+
+function selectTema(temaId){
+  state.tema = temaId;
+  const tema = TEMI.find(t=>t.id===temaId);
+  document.getElementById('tema-title').textContent = tema.label;
+  document.getElementById('tema-lede').textContent = "Dataset consigliati per questo tema, già verificati per non duplicare fonti nazionali o regionali esistenti.";
+  const list = document.getElementById('dataset-list');
+  list.innerHTML = tema.datasets.map(dsId=>{
+    const ds = DATASETS[dsId];
+    return `<div class="dataset-card" data-ds="${dsId}" tabindex="0" role="button">
+      <div>
+        <span class="badge-clean">non duplicato altrove</span>
+        <h3>${ds.title}</h3>
+        <p>${ds.desc}</p>
+      </div>
+      <span class="go">→</span>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.dataset-card').forEach(el=>{
+    el.addEventListener('click', ()=>selectDataset(el.dataset.ds));
+    el.addEventListener('keypress', e=>{ if(e.key==='Enter') selectDataset(el.dataset.ds); });
+  });
+  goTo(2);
+}
+
+/* ===== Step 3: template ===== */
+function selectDataset(dsId){
+  state.dataset = dsId;
+  const ds = DATASETS[dsId];
+  document.getElementById('ds-title').textContent = ds.title;
+  document.getElementById('ds-desc').textContent = ds.desc;
+  document.getElementById('ds-onto').textContent = ds.onto;
+
+  const body = document.getElementById('fields-body');
+  body.innerHTML = ds.fields.map(f=>`
+    <tr>
+      <td><strong>${f.name}</strong></td>
+      <td class="field-type">${f.type}</td>
+      <td>${f.req ? '<span class="req">obbligatorio</span>' : '<span class="opt">facoltativo</span>'}</td>
+      <td><span class="onto-chip">${f.onto}</span></td>
+    </tr>
+  `).join('');
+
+  const noteBox = document.getElementById('ds-note');
+  if(ds.note){
+    noteBox.hidden = false;
+    noteBox.textContent = ds.note;
+  } else {
+    noteBox.hidden = true;
+  }
+
+  goTo(3);
+}
+
+document.getElementById('btn-download').addEventListener('click', ()=>{
+  const ds = DATASETS[state.dataset];
+  if(!ds) return;
+  const header = ds.fields.map(f=>f.name).join(',');
+  const rows = (ds.examples || []).map(row =>
+    row.map(cell => {
+      const v = String(cell);
+      return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v;
+    }).join(',')
+  );
+  const csv = "\uFEFF" + [header, ...rows].join("\r\n") + "\r\n";
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = state.dataset + '_modello.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+/* ===== init ===== */
+renderRail();
+renderTemi();
+</script>
+</body>
+</html>
