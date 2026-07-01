@@ -13,14 +13,13 @@ Procedura guidata statica, in una singola pagina HTML, per aiutare un Comune a p
 
 Ogni dataset proposto è stato selezionato incrociando:
 - il corpus di CSV reali pubblicati da Comuni italiani su portali CKAN (Lecce, Matera, Comuni dei Messapi)
-- gli schemi CSV maturi del progetto [comune-metrics](https://github.com/piersoft/comune-metrics)
 - le ontologie ufficiali AGID pubblicate su [dati-semantic-assets](https://github.com/italia/dati-semantic-assets)
 
 Sono esclusi i temi già coperti da fonti nazionali/regionali (bilancio via SIOPE, numerazione civica via ANNCSU, bandi via ANAC, PNRR via ReGiS, ecc.): l'obiettivo non è la quantità di dataset pubblicati, ma dati di qualità che aggiungono davvero informazione.
 
 ## Uso
 
-Nessuna installazione. Basta aprire `wizard-opendata-comuni.html` in un browser, oppure pubblicarlo così com'è su GitHub Pages.
+Nessuna installazione. Basta aprire [https://piersoft.github.io/comune-csv-demo/](index.html) in un browser, oppure scaricarlo.
 
 Tutti i dati (temi, dataset, campi, esempi) sono incorporati nel file: funziona anche offline.
 
@@ -33,7 +32,7 @@ Un solo file HTML autosufficiente:
 
 ## Validazione
 
-I CSV scaricati sono già pensati per superare i controlli del validatore [CSV-to-RDF](https://piersoft.github.io/CSV-to-RDF/validatore-csv-pa.html) (colonna identificatore univoco, formato date ISO 8601, encoding UTF-8) e per essere poi arricchiti semanticamente su SIMBA.
+I CSV scaricati sono già pensati per superare i controlli del validatore SIMBA (colonna identificatore univoco, formato date ISO 8601, encoding UTF-8) e per essere poi arricchiti semanticamente sempre su SIMBA.
 
 ## Licenza
 
